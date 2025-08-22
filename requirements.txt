@@ -78,7 +78,7 @@ networkx==3.4.2
 notebook==7.4.2
 notebook_shim==0.2.4
 numpy==1.26.0
-open_clip_torch==3.1.0
+open_clip_torch
 opencv-python==4.11.0.86
 opencv-python-headless==4.11.0.86
 overrides==7.7.0
@@ -140,14 +140,14 @@ sympy==1.14.0
 termcolor==3.1.0
 terminado==0.18.1
 threadpoolctl==3.6.0
-timm==1.0.19
+timm
 tinycss2==1.4.0
 tk==0.1.0
 tokenizers==0.21.1
 tomli==2.2.1
 torch==2.2.1
 torchaudio==2.2.1
-torchscale==0.3.0
+torchscale
 torchvision==0.17.1
 tornado==6.4.2
 tqdm==4.67.1
