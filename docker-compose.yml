@@ -94,10 +94,11 @@ services:
     depends_on:
       - etcd
       - minio
-    networks:
+    networks: 
       - app-net
     restart: unless-stopped
 
 networks:
   app-net:
+    name: ai-challenge-network  # need to change this to fit with fe
     driver: bridge

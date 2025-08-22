@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Query, UploadFile, File, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from typing import List, Optional
 import numpy as np
 import torch
@@ -18,10 +19,10 @@ sys.path.append(os.path.abspath(os.path.join(
 from vith14_model import VITH14Model
 from vitg14_model import VITG14Model
 from beit3_model import BEiT3FeatureExtractor
-CHECKPOINT_PATH = r"C:\GIAHUY\AIC2025\beit3_large_itc_patch16_224.pth"  # ndeed to change
+CHECKPOINT_PATH = r"C:\D\02_AIC\PATH\beit3_large_itc_patch16_224.pth"  # ndeed to change
 # need to change
-WEIGHT_PATH = r"C:\GIAHUY\AIC2025\beit3_large_patch16_384_f30k_retrieval.pth"
-SENTENCEPIECE_PATH = r"C:\GIAHUY\AIC2025\beit3.spm"  # need to change
+WEIGHT_PATH = r"C:\D\02_AIC\PATH\beit3_large_patch16_384_f30k_retrieval.pth"
+SENTENCEPIECE_PATH = r"C:\D\02_AIC\PATH\beit3.spm"  # need to change
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
 # =======================MODEL=====================================
@@ -47,6 +48,20 @@ es = Elasticsearch("http://localhost:9200")
 
 # ============================================================
 app = FastAPI()
+
+origins = [
+    "http://localhost",
+    "http://localhost:3000", # Port của FE trong Docker
+    "http://localhost:5173", # Port của FE khi chạy "npm run dev"
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # ================== SUB FUNCTIONS ===========================
 def normalize_embedding(embedding):
