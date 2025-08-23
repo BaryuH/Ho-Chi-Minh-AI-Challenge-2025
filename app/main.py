@@ -151,7 +151,7 @@ def fetch_meta_by_global_ids(global_ids: List[str]) -> dict:
 
     es_query_kw = {
         "query": {"terms": {"global_id.keyword": global_ids}},
-        "_source": ["global_id", "frame_name", "video_name", "timestamp_ms", "timestamps_ms", "frame_url", "video_url"],
+        "_source": ["global_id", "frame_name", "video_name", "timestamp_ms", "timestamps_ms", "frame_url", "video_url","fps"],
         "size": len(global_ids)
     }
     try:
@@ -162,7 +162,7 @@ def fetch_meta_by_global_ids(global_ids: List[str]) -> dict:
         if not hits:
             es_query_plain = {
                 "query": {"terms": {"global_id": global_ids}},
-                "_source": ["global_id", "frame_name", "video_name", "timestamp_ms", "timestamps_ms", "frame_url", "video_url"],
+                "_source": ["global_id", "frame_name", "video_name", "timestamp_ms", "timestamps_ms", "frame_url", "video_url","fps"],
                 "size": len(global_ids)
             }
             res = es.search(index="frame_info", body=es_query_plain)
@@ -174,12 +174,14 @@ def fetch_meta_by_global_ids(global_ids: List[str]) -> dict:
             gid = src.get("global_id")
             if gid:
                 ts = src.get("timestamp_ms", src.get("timestamps_ms"))
+                fps = src.get("fps", None)
                 meta_map[gid] = {
                     "frame_name": src.get("frame_name"),
                     "video_name": src.get("video_name"),
                     "timestamp_ms": ts,
                     "frame_url": src.get("frame_url"),
                     "video_url": src.get("video_url"),
+                    "fps": fps
                 }
         return meta_map
     except Exception as e:
@@ -258,6 +260,7 @@ async def search_image(
             "timestamp_ms": meta.get("timestamp_ms"),
             "frame_url": meta.get("frame_url"),
             "video_url": meta.get("video_url"),
+            "fps": meta.get("fps")
         })
     return {"results": result_data}
 
@@ -354,6 +357,7 @@ async def search_text(
             "timestamp_ms": meta.get("timestamp_ms"),
             "frame_url": meta.get("frame_url"),
             "video_url": meta.get("video_url"),
+            "fps": meta.get("fps")
         })
     return {"results": result_data}
 
@@ -396,6 +400,7 @@ async def search_ocr(
                 "timestamp_ms": meta.get("timestamp_ms", src.get("timestamp_ms", src.get("timestamps_ms"))),
                 "frame_url": meta.get("frame_url", src.get("frame_url")),
                 "video_url": meta.get("video_url", src.get("video_url")),
+                "fps": meta.get("fps")
             })
         return {"results": results}
     except Exception as e:
@@ -451,7 +456,8 @@ async def search_asr(
                                             "timestamps_ms",
                                             "frame_url",
                                             "video_url",
-                                            "asr_text"
+                                            "asr_text", 
+                                            "fps"
                                         ]
                                     }
                                 }
@@ -485,7 +491,8 @@ async def search_asr(
                         "frame_name": src.get("frame_name"),
                         "timestamp_ms": src.get("timestamp_ms", src.get("timestamps_ms")),
                         "frame_url": src.get("frame_url"),
-                        "video_url": src.get("video_url")
+                        "video_url": src.get("video_url"),
+                        "fps" : src.get("fps")
                     })
                 segments_out.append({
                     "asr_text": asr_text,
@@ -577,23 +584,10 @@ def _search_event_candidates_text(
             "frame_name": m.get("frame_name"),
             "frame_url": m.get("frame_url"),
             "video_url": m.get("video_url"),
+            "fps": m.get("fps")
         })
     return out
 
-
-def _segmentize(frames):
-    if not frames:
-        return []
-    frames = sorted(frames, key=lambda x: x["timestamp_ms"])
-    segs, cur = [], [frames[0]]
-    for f in frames[1:]:
-        if f["timestamp_ms"] - cur[-1]["timestamp_ms"] <= GAP_MS:
-            cur.append(f)
-        else:
-            segs.append({"start_ms": cur[0]["timestamp_ms"], "end_ms": cur[-1]["timestamp_ms"], "frames": cur})
-            cur = [f]
-    segs.append({"start_ms": cur[0]["timestamp_ms"], "end_ms": cur[-1]["timestamp_ms"], "frames": cur})
-    return segs
 
 
 def _dp_monotone_chain(stages_by_video):
@@ -645,7 +639,8 @@ def _dp_monotone_chain(stages_by_video):
                 "timestamp_ms": f["ts"],
                 "frame_name": f["frame_name"],
                 "frame_url": f["frame_url"],
-                "video_url": f["video_url"]
+                "video_url": f["video_url"],
+                "fps": f["fps"]
             })
             cur_j = idx_back[i][cur_j] if i > 0 else -1
             if cur_j == -1 and i > 0:
@@ -654,8 +649,7 @@ def _dp_monotone_chain(stages_by_video):
 
         out[video] = {
             "total_score": total,
-            "events": path,
-            "segments": _segmentize(path)
+            "events": path
         }
     return out
 
@@ -709,14 +703,14 @@ async def search_temporal(
                     "timestamp_ms": best["ts"],
                     "frame_name": best["frame_name"],
                     "frame_url": best["frame_url"],
-                    "video_url": best["video_url"]
+                    "video_url": best["video_url"],
+                    "fps": best["fps"]
                 }]
                 out["videos"].append({
                     "video_name": v,
                     "best_sequence": {
                         "total_score": best["score"],
-                        "events": events,
-                        "segments": _segmentize(events)
+                        "events": events
                     }
                 })
             return out

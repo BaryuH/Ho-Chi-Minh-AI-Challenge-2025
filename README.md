@@ -1,4 +1,3 @@
-
 # 🚀 Ho-Chi-Minh-AI-Challenge-2025
 
 ## 📘 Hướng dẫn test thử hệ thống (demo)
@@ -29,13 +28,6 @@ conda activate py312
 pip install -r requirements.txt
 ```
 
-> 💡 **Note**: Rất có thể sẽ có lỗi nếu bản CUDA không phù hợp (máy có card rời) hoặc máy không có card. Khi đó chạy:
-
-```bash
-pip uninstall -y torch torchvision torchaudio torchmetrics torchscale
-pip install torch==2.2.1 torchvision==0.17.1 torchaudio==2.2.1
-```
-
 ---
 
 ### 📂 Bước 4: Tải dữ liệu
@@ -46,6 +38,7 @@ pip install torch==2.2.1 torchvision==0.17.1 torchaudio==2.2.1
   - Các file `.jsonl` để vào thư mục `PATH/data`
   - Các file còn lại có thể để ở `PATH` hoặc local
 - Nhớ đổi lại path tới các data này ở trong các file .py
+
 ---
 
 ### 🐋 Bước 5: Chạy Docker (tại thư mục repo)
@@ -70,6 +63,7 @@ map_to_minio.py  ->  es_indexing.py  ->  milvus_indexing.py
 ```
 
 > ⚠️ **Lưu ý**: Trước khi chạy `milvus_indexing.py`, chạy trong cmd:
+
 ```bash
 cd data
 python milvus_indexing.py
@@ -83,7 +77,7 @@ python milvus_indexing.py
   - Máy local khó chạy 3 model cùng lúc → chọn 1 model (khuyến nghị **BeiT-3**)
   - `Fused model` chưa hỗ trợ → đừng dùng
   - Bỏ URL image search chưa làm → đừng dùng
-- Hiện tại chỉ có backend (chưa có frontend). Temporal search chưa làm.
+- Hiện tại chỉ có backend (chưa có frontend).
 
 👉 Chạy server:
 
