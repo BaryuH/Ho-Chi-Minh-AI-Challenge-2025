@@ -15,13 +15,13 @@ sys.path.append(os.path.abspath(os.path.join(
     os.path.dirname(__file__), '..', 'models')))
 
 # ============================================================
-from beit3_model import BEiT3FeatureExtractor
-from vitg14_model import VITG14Model
 from vith14_model import VITH14Model
-CHECKPOINT_PATH = r"C:\GIAHUY\AIC2025\beit3_large_itc_patch16_224.pth"  # ndeed to change
+from vitg14_model import VITG14Model
+from beit3_model import BEiT3FeatureExtractor
+CHECKPOINT_PATH = r"..\beit3_large_itc_patch16_224.pth"  # ndeed to change
 # need to change
-WEIGHT_PATH = r"C:\GIAHUY\AIC2025\beit3_large_patch16_384_f30k_retrieval.pth"
-SENTENCEPIECE_PATH = r"C:\GIAHUY\AIC2025\beit3.spm"  # need to change
+WEIGHT_PATH = r"..\beit3_large_patch16_384_f30k_retrieval.pth"
+SENTENCEPIECE_PATH = r"..\beit3.spm"  # need to change
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
 # =======================MODEL=====================================
@@ -197,15 +197,16 @@ def fetch_meta_by_global_ids(global_ids: List[str]) -> dict:
 async def search_image(
     image: Optional[UploadFile] = File(None),
     model: str = Query("fused", enum=["vith14", "beit3", "vitg14", "fused"]),
-    top_k: int = Query(25, ge=1, le=400),
-    ocr_keywords: Optional[List[str]] = Query(
+    top_k: int = Query(25, ge=1, le=200),
+    ocr_keywords: Optional[str] = Query(
         None, description="Từ khóa OCR để filter"),
-    asr_keywords: Optional[List[str]] = Query(
+    asr_keywords: Optional[str] = Query(
         None, description="Từ khóa ASR để filter")
 ):
     if image:
         content = await image.read()
         img = load_image_from_bytes(content)
+
     if model == "fused":
         embedding = get_fused_embedding(img)
         collection = collection2
@@ -225,13 +226,14 @@ async def search_image(
         embedding = vitg14.get_image_embedding(img_buf)
         collection = collection3
         anns_field = "vitg14_vec"
+
     candidate_ids = filter_ids_by_es(ocr_keywords, asr_keywords)
 
     if candidate_ids is not None:
         results = collection.search(
             [embedding.tolist()],
             anns_field=anns_field,
-            param={"metric_type": "IP", "params": {"nprobe": 1000}},
+            param={"metric_type": "IP", "params": {"nprobe": 250}},
             limit=top_k,
             expr=f'global_id in {candidate_ids}',
             output_fields=["global_id"]
@@ -240,16 +242,18 @@ async def search_image(
         results = collection.search(
             [embedding.tolist()],
             anns_field=anns_field,
-            param={"metric_type": "IP", "params": {"nprobe": 1000}},
+            param={"metric_type": "IP", "params": {"nprobe": 250}},
             limit=top_k,
             output_fields=["global_id"]
         )
+
     global_ids = [
         hit.entity.get("global_id")
         for hit in results[0]
         if getattr(hit, "entity", None) is not None and hit.entity.get("global_id") is not None
     ]
     meta_map = fetch_meta_by_global_ids(global_ids)
+
     result_data = []
     for rank, hit in enumerate(results[0], start=1):
         gid = hit.entity.get("global_id") if getattr(
@@ -274,10 +278,10 @@ async def search_image(
 async def search_text(
     query: str = Query(..., description="Nội dung văn bản để tìm kiếm"),
     model: str = Query("vith14", enum=["vith14", "beit3", "vitg14"]),
-    top_k: int = Query(25, ge=25, le=400),
-    ocr_keywords: Optional[List[str]] = Query(
+    top_k: int = Query(25, ge=25, le=200),
+    ocr_keywords: Optional[str] = Query(
         None, description="Từ khóa OCR để filter"),
-    asr_keywords: Optional[List[str]] = Query(
+    asr_keywords: Optional[str] = Query(
         None, description="Từ khóa ASR để filter")
 ):
     candidate_ids = filter_ids_by_es(ocr_keywords, asr_keywords)
@@ -289,7 +293,7 @@ async def search_text(
             results = collection1.search(
                 [embedding.tolist()],
                 anns_field="vith14_vec",
-                param={"metric_type": "IP", "params": {"nprobe": 500}},
+                param={"metric_type": "IP", "params": {"nprobe": 250}},
                 limit=top_k,
                 expr=f'global_id in {candidate_ids}',
                 output_fields=["global_id"]
@@ -298,7 +302,7 @@ async def search_text(
             results = collection1.search(
                 [embedding.tolist()],
                 anns_field="vith14_vec",
-                param={"metric_type": "IP", "params": {"nprobe": 500}},
+                param={"metric_type": "IP", "params": {"nprobe": 250}},
                 limit=top_k,
                 output_fields=["global_id"]
             )
@@ -308,7 +312,7 @@ async def search_text(
             results = collection2.search(
                 [embedding.tolist()],
                 anns_field="beit3_vec",
-                param={"metric_type": "IP", "params": {"nprobe": 1000}},
+                param={"metric_type": "IP", "params": {"nprobe": 250}},
                 limit=top_k,
                 expr=f'global_id in {candidate_ids}',
                 output_fields=["global_id"]
@@ -317,7 +321,7 @@ async def search_text(
             results = collection2.search(
                 [embedding.tolist()],
                 anns_field="beit3_vec",
-                param={"metric_type": "IP", "params": {"nprobe": 1000}},
+                param={"metric_type": "IP", "params": {"nprobe": 250}},
                 limit=top_k,
                 output_fields=["global_id"]
             )
@@ -327,7 +331,7 @@ async def search_text(
             results = collection3.search(
                 [embedding.tolist()],
                 anns_field="vitg14_vec",
-                param={"metric_type": "IP", "params": {"nprobe": 1000}},
+                param={"metric_type": "IP", "params": {"nprobe": 250}},
                 limit=top_k,
                 expr=f'global_id in {candidate_ids}',
                 output_fields=["global_id"]
@@ -336,7 +340,7 @@ async def search_text(
             results = collection3.search(
                 [embedding.tolist()],
                 anns_field="vitg14_vec",
-                param={"metric_type": "IP", "params": {"nprobe": 1000}},
+                param={"metric_type": "IP", "params": {"nprobe": 250}},
                 limit=top_k,
                 output_fields=["global_id"]
             )
@@ -347,6 +351,7 @@ async def search_text(
         if getattr(hit, "entity", None) is not None and hit.entity.get("global_id") is not None
     ]
     meta_map = fetch_meta_by_global_ids(global_ids)
+
     result_data = []
     for rank, hit in enumerate(results[0], start=1):
         gid = hit.entity.get("global_id") if getattr(
@@ -371,7 +376,7 @@ async def search_text(
 @app.post("/search_ocr")
 async def search_ocr(
     query: str = Query(..., description="Câu OCR để match"),
-    top_k: int = Query(25, ge=1, le=400)
+    top_k: int = Query(25, ge=1, le=200)
 ):
     es_body = {
         "query": {
@@ -677,7 +682,7 @@ async def search_temporal(
     ocr2: Optional[str] = Query(None), asr2: Optional[str] = Query(None),
     ocr3: Optional[str] = Query(None), asr3: Optional[str] = Query(None),
     model: str = Query("beit3", enum=["vith14", "beit3", "vitg14"]),
-    topk_per_event: int = Query(200, ge=10, le=1000)
+    topk_per_event: int = Query(150, ge=10, le=1000)
 ):
     try:
         stages_raw = []
