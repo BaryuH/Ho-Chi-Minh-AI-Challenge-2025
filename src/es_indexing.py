@@ -10,7 +10,7 @@ es = Elasticsearch(
 if not es.indices.exists(index="frame_info"):
     es.indices.create(index="frame_info")
 
-file_path = "C:/GIAHUY/AIC2025/data/keyframes_minio.json" # need to change 
+file_path = "C:\GIAHUY\github\Ho-Chi-Minh-AI-Challenge-2025\data\keyframes_minio.json" # need to change 
 with open(file_path, "r", encoding="utf-8") as f:
     data = json.load(f)
 

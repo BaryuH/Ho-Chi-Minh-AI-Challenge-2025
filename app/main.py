@@ -10,14 +10,14 @@ import sys
 import os
 from PIL import Image
 import requests
-from fastapi.middleware.cors import CORSMiddleware 
+from fastapi.middleware.cors import CORSMiddleware
 sys.path.append(os.path.abspath(os.path.join(
     os.path.dirname(__file__), '..', 'models')))
 
 # ============================================================
-from vith14_model import VITH14Model
-from vitg14_model import VITG14Model
 from beit3_model import BEiT3FeatureExtractor
+from vitg14_model import VITG14Model
+from vith14_model import VITH14Model
 CHECKPOINT_PATH = r"C:\GIAHUY\AIC2025\beit3_large_itc_patch16_224.pth"  # ndeed to change
 # need to change
 WEIGHT_PATH = r"C:\GIAHUY\AIC2025\beit3_large_patch16_384_f30k_retrieval.pth"
@@ -50,8 +50,8 @@ app = FastAPI()
 
 origins = [
     "http://localhost",
-    "http://localhost:3000", # Port của FE trong Docker
-    "http://localhost:5173", # Port của FE khi chạy "npm run dev"
+    "http://localhost:3000",  # Port của FE trong Docker
+    "http://localhost:5173",  # Port của FE khi chạy "npm run dev"
 ]
 
 app.add_middleware(
@@ -61,11 +61,13 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-MINIMUM_SHOULD_MATCH = "30%"  
-MAX_VIDEOS = 50               
-MAX_SEGMENTS_PER_VIDEO = 30    
-MAX_FRAMES_PER_SEGMENT = 50  
+MINIMUM_SHOULD_MATCH = "30%"
+MAX_VIDEOS = 50
+MAX_SEGMENTS_PER_VIDEO = 30
+MAX_FRAMES_PER_SEGMENT = 50
 # ================== SUB FUNCTIONS ===========================
+
+
 def normalize_embedding(embedding):
     return normalize(embedding.reshape(1, -1))[0]
 
@@ -138,7 +140,8 @@ def filter_ids_by_es(
     }
 
     res = es.search(index="frame_info", body=es_query)
-    candidate_ids = [hit["_source"]["global_id"] for hit in res["hits"]["hits"]]
+    candidate_ids = [hit["_source"]["global_id"]
+                     for hit in res["hits"]["hits"]]
 
     if not candidate_ids:
         return ["__none__"]
@@ -151,18 +154,17 @@ def fetch_meta_by_global_ids(global_ids: List[str]) -> dict:
 
     es_query_kw = {
         "query": {"terms": {"global_id.keyword": global_ids}},
-        "_source": ["global_id", "frame_name", "video_name", "timestamp_ms", "timestamps_ms", "frame_url", "video_url","fps"],
+        "_source": ["global_id", "frame_name", "video_name", "timestamp_ms", "timestamps_ms", "frame_url", "video_url", "fps"],
         "size": len(global_ids)
     }
     try:
         res = es.search(index="frame_info", body=es_query_kw)
         hits = res.get("hits", {}).get("hits", [])
 
-
         if not hits:
             es_query_plain = {
                 "query": {"terms": {"global_id": global_ids}},
-                "_source": ["global_id", "frame_name", "video_name", "timestamp_ms", "timestamps_ms", "frame_url", "video_url","fps"],
+                "_source": ["global_id", "frame_name", "video_name", "timestamp_ms", "timestamps_ms", "frame_url", "video_url", "fps"],
                 "size": len(global_ids)
             }
             res = es.search(index="frame_info", body=es_query_plain)
@@ -189,6 +191,8 @@ def fetch_meta_by_global_ids(global_ids: List[str]) -> dict:
         return {}
 
 # ------------------ SEARCH IMAGE ------------------
+
+
 @app.post("/search_image")
 async def search_image(
     image: Optional[UploadFile] = File(None),
@@ -253,7 +257,7 @@ async def search_image(
         meta = meta_map.get(gid, {}) if gid is not None else {}
         result_data.append({
             "rank": rank,
-            "id": gid,             
+            "id": gid,
             "score": hit.distance,
             "frame_name": meta.get("frame_name"),
             "video_name": meta.get("video_name"),
@@ -350,7 +354,7 @@ async def search_text(
         meta = meta_map.get(gid, {}) if gid is not None else {}
         result_data.append({
             "rank": rank,
-            "id": gid,                  
+            "id": gid,
             "score": hit.distance,
             "frame_name": meta.get("frame_name"),
             "video_name": meta.get("video_name"),
@@ -362,6 +366,8 @@ async def search_text(
     return {"results": result_data}
 
 # ================== OCR SEARCH ==================
+
+
 @app.post("/search_ocr")
 async def search_ocr(
     query: str = Query(..., description="Câu OCR để match"),
@@ -383,7 +389,8 @@ async def search_ocr(
     try:
         res = es.search(index="frame_info", body=es_body)
         hits = res.get("hits", {}).get("hits", [])
-        global_ids = [h["_source"]["global_id"] for h in hits if "_source" in h]
+        global_ids = [h["_source"]["global_id"]
+                      for h in hits if "_source" in h]
         meta_map = fetch_meta_by_global_ids(global_ids)
 
         results = []
@@ -405,8 +412,10 @@ async def search_ocr(
         return {"results": results}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Lỗi OCR search: {e}")
-    
+
 # ================== ASR SEARCH ==================
+
+
 @app.post("/search_asr")
 async def search_asr(
     query: str = Query(..., description="ASR text to match"),
@@ -419,34 +428,34 @@ async def search_asr(
             "asr_text": {
                 "query": query,
                 "operator": "or",
-                "minimum_should_match": MINIMUM_SHOULD_MATCH  
+                "minimum_should_match": MINIMUM_SHOULD_MATCH
             }
         }
     }
 
     es_body = {
-        "size": 0,               
+        "size": 0,
         "query": base_query,
         "aggs": {
             "by_video": {
                 "terms": {
                     "field": "video_name.keyword",
                     "size": top_videos,
-                    "order": {"_count": "desc"}  
+                    "order": {"_count": "desc"}
                 },
                 "aggs": {
                     "by_asr": {
                         "terms": {
                             "field": "asr_text.keyword",
                             "size": top_segments_per_video,
-                            "order": {"min_ts": "asc"}  
+                            "order": {"min_ts": "asc"}
                         },
                         "aggs": {
-                            "min_ts": { "min": { "field": "timestamp_ms" } },
+                            "min_ts": {"min": {"field": "timestamp_ms"}},
                             "frames": {
                                 "top_hits": {
                                     "size": top_frames_per_segment,
-                                    "sort": [{ "timestamp_ms": { "order": "asc" } }],
+                                    "sort": [{"timestamp_ms": {"order": "asc"}}],
                                     "_source": {
                                         "includes": [
                                             "global_id",
@@ -456,7 +465,7 @@ async def search_asr(
                                             "timestamps_ms",
                                             "frame_url",
                                             "video_url",
-                                            "asr_text", 
+                                            "asr_text",
                                             "fps"
                                         ]
                                     }
@@ -464,7 +473,7 @@ async def search_asr(
                             }
                         }
                     },
-                    "first_ts": { "min": { "field": "timestamp_ms" } }  
+                    "first_ts": {"min": {"field": "timestamp_ms"}}
                 }
             }
         }
@@ -472,7 +481,8 @@ async def search_asr(
 
     try:
         res = es.search(index="frame_info", body=es_body)
-        buckets_video = res.get("aggregations", {}).get("by_video", {}).get("buckets", [])
+        buckets_video = res.get("aggregations", {}).get(
+            "by_video", {}).get("buckets", [])
 
         out = {"videos": []}
         for vb in buckets_video:
@@ -492,7 +502,7 @@ async def search_asr(
                         "timestamp_ms": src.get("timestamp_ms", src.get("timestamps_ms")),
                         "frame_url": src.get("frame_url"),
                         "video_url": src.get("video_url"),
-                        "fps" : src.get("fps")
+                        "fps": src.get("fps")
                     })
                 segments_out.append({
                     "asr_text": asr_text,
@@ -509,13 +519,15 @@ async def search_asr(
         return out
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Lỗi ASR grouped search: {e}")
-    
+        raise HTTPException(
+            status_code=500, detail=f"Lỗi ASR grouped search: {e}")
 
 
 # ================== TEMPORAL SEARCH==================
 
-GAP_MS = 500  
+GAP_MS = 500
+
+
 def _search_event_candidates_text(
     event_text: str,
     model: str,
@@ -568,7 +580,8 @@ def _search_event_candidates_text(
 
     out = []
     for hit in results[0]:
-        gid = hit.entity.get("global_id") if getattr(hit, "entity", None) is not None else None
+        gid = hit.entity.get("global_id") if getattr(
+            hit, "entity", None) is not None else None
         if not gid:
             continue
         m = meta_map.get(gid, {})
@@ -589,7 +602,6 @@ def _search_event_candidates_text(
     return out
 
 
-
 def _dp_monotone_chain(stages_by_video):
     out = {}
     for video, stages in stages_by_video.items():
@@ -599,13 +611,13 @@ def _dp_monotone_chain(stages_by_video):
         if any(len(st) == 0 for st in stages):
             continue
         cands = [sorted(st, key=lambda x: x["ts"]) for st in stages]
-        idx_back = []  
+        idx_back = []
         dp_prev = [c["score"] for c in cands[0]]
         idx_prev = list(range(len(cands[0])))
-        idx_back.append([-1 for _ in cands[0]])  
+        idx_back.append([-1 for _ in cands[0]])
         for i in range(1, m):
-            a = cands[i-1]  
-            b = cands[i]    
+            a = cands[i-1]
+            b = cands[i]
             dp_curr = [float("-inf")] * len(b)
             back_curr = [-1] * len(b)
             k = 0
@@ -657,8 +669,10 @@ def _dp_monotone_chain(stages_by_video):
 @app.post("/search_temporal")
 async def search_temporal(
     q1: str = Query(..., description="Mô tả sự kiện 1 (text search)"),
-    q2: Optional[str] = Query(None, description="Mô tả sự kiện 2 (text search)"),
-    q3: Optional[str] = Query(None, description="Mô tả sự kiện 3 (text search)"),
+    q2: Optional[str] = Query(
+        None, description="Mô tả sự kiện 2 (text search)"),
+    q3: Optional[str] = Query(
+        None, description="Mô tả sự kiện 3 (text search)"),
     ocr1: Optional[str] = Query(None), asr1: Optional[str] = Query(None),
     ocr2: Optional[str] = Query(None), asr2: Optional[str] = Query(None),
     ocr3: Optional[str] = Query(None), asr3: Optional[str] = Query(None),
@@ -668,32 +682,37 @@ async def search_temporal(
     try:
         stages_raw = []
 
-        c1 = _search_event_candidates_text(q1, model, topk_per_event, ocr1, asr1)
+        c1 = _search_event_candidates_text(
+            q1, model, topk_per_event, ocr1, asr1)
         stages_raw.append(c1)
 
         if q2:
-            c2 = _search_event_candidates_text(q2, model, topk_per_event, ocr2, asr2)
+            c2 = _search_event_candidates_text(
+                q2, model, topk_per_event, ocr2, asr2)
             stages_raw.append(c2)
 
         if q3:
-            c3 = _search_event_candidates_text(q3, model, topk_per_event, ocr3, asr3)
+            c3 = _search_event_candidates_text(
+                q3, model, topk_per_event, ocr3, asr3)
             stages_raw.append(c3)
 
         m = len(stages_raw)
         if m == 0:
-            raise HTTPException(status_code=400, detail="Không có sự kiện nào hợp lệ.")
+            raise HTTPException(
+                status_code=400, detail="Không có sự kiện nào hợp lệ.")
 
         stages_by_video = {}
         for i, cand_list in enumerate(stages_raw):
             for c in cand_list:
                 v = c["video"]
-                stages_by_video.setdefault(v, [ [] for _ in range(m) ])
+                stages_by_video.setdefault(v, [[] for _ in range(m)])
                 stages_by_video[v][i].append(c)
 
         if m == 1:
             out = {"videos": []}
             for v, stage_lists in stages_by_video.items():
-                s0 = sorted(stage_lists[0], key=lambda x: x["score"], reverse=True)
+                s0 = sorted(stage_lists[0],
+                            key=lambda x: x["score"], reverse=True)
                 if not s0:
                     continue
                 best = s0[0]
@@ -728,4 +747,5 @@ async def search_temporal(
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Lỗi temporal search: {e}")
+        raise HTTPException(
+            status_code=500, detail=f"Lỗi temporal search: {e}")
