@@ -27,7 +27,7 @@
 | [**Pham Tuan Khang**](https://github.com/KhangPham205) | Frontend Developer (Integration & Optimazation & Perfomance) | Implemented API connections and custom hooks for backend integration. Managed data flow, caching, and optimization. Led code review and maintained project documentation. |
 
 
-Frontend repository: [🔗 Ho-Chi-Minh-AI-Challenge-2025_Front-end](https://github.com/frontend-team/pika-search-ui)
+Frontend repository: 🔗[Ho-Chi-Minh-AI-Challenge-2025_Front-end](https://github.com/KhangPham205/Ho-Chi-Minh-AI-Challenge-2025_Front-end)
 
 ---
 
