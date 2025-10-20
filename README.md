@@ -1,98 +1,45 @@
-# 🚀 Ho-Chi-Minh-AI-Challenge-2025
+# 🧠 PIKA Search - Interactive Video Retrieval System (HCMC-AIC 2025)
 
-## 📘 Hướng dẫn test thử hệ thống (demo)
-
----
-
-### 📝 Bước 1: Clone repo này :v
-
-```bash
-git clone <repo-url>
-```
+**PIKA Search** is an **AI-powered interactive video retrieval system** developed for **HCMC-AIC 2025**.
 
 ---
 
-### 🐳 Bước 2: Tải Docker Desktop
-
-👉 Tải về tại [Docker Desktop](https://www.docker.com/products/docker-desktop/)
-
----
-
-### ⚙️ Bước 3: Setup environment
-
-Trong thư mục repo (cmd):
-
-```bash
-conda create -n py312 python==3.12.6
-conda activate py312
-pip install -r requirements.txt
-```
+<p align="center">
+  <img src="assets/logo.png" alt="PIKA Search Logo" width="800">
+</p>
 
 ---
 
-### 📂 Bước 4: Tải dữ liệu
+## 🎥 Demo
 
-- 📥 [**Link tải dữ liệu**](https://drive.google.com/drive/folders/1zjTBufHvn-PiejWPlHmSl2nPftyd_PvB?usp=drive_link)
-- Giả sử **path** của thư mục repo là **_PATH_**
-- Phân bố file sau khi tải:
-  - Các file `.jsonl` để vào thư mục `PATH/data`
-  - Các file còn lại có thể để ở `PATH` hoặc local
-- Nhớ đổi lại path tới các data này ở trong các file .py
+> 🔗 [Live Demo Link](https://youtu.be/P8ddazL9jTU)
 
 ---
 
-### 🐋 Bước 5: Chạy Docker (tại thư mục repo)
+## 🧠 Team Roles
 
-```bash
-docker compose up
-docker ps
-```
+| Member | Role | Contribution |
+|---------|------|---------------|
+| [**Pham Nguyen Gia Huy**](https://github.com/BaryuH) | Team Lead, Backend & Model Integration | System architecture, pipeline, model deployment, data preprocessing, feature extraction, and indexing pipeline|
+| [**Nguyen Gia Huy**](https://github.com/anhbilong) | Data Engineer | Data preprocessing, feature extraction, and indexing pipeline |
+| [**Nguyen Quang Nghia**](https://github.com/JulianNguyen1610) | Data Engineer | Data preprocessing, feature extraction, and indexing pipeline |
+| [**Tran Thi Hong Thanh**](https://github.com/ThankTran) | Frontend Developer (UI/UX & Optimazation) | Designed the entire user interface with focus on clean visuals, responsiveness, and smooth performance. Built the interactive result viewer for video playback and similarity visualization. |
+| [**Pham Tuan Khang**](https://github.com/KhangPham205) | Frontend Developer (Integration & Optimazation & Perfomance) | Implemented API connections and custom hooks for backend integration. Managed data flow, caching, and optimization. Led code review and maintained project documentation. |
 
-- Vào các địa chỉ sau để check web:
-  - 🌐 [http://localhost:9001/](http://localhost:9001/) (**Minio**) user/pass: `minioadmin`
-  - 🌐 [http://localhost:5601/app/home](http://localhost:5601/app/home) (**Elastic Search**)
 
----
-
-### 📊 Bước 6: Setup dữ liệu
-
-Chạy lần lượt các file trong `src`, nhớ đổi **path** trong từng file:
-
-```bash
-map_to_minio.py  ->  es_indexing.py  ->  milvus_indexing.py
-```
-
-> ⚠️ **Lưu ý**: Trước khi chạy `milvus_indexing.py`, chạy trong cmd:
-
-```bash
-cd data
-python milvus_indexing.py
-```
+Frontend repository: [🔗 Ho-Chi-Minh-AI-Challenge-2025_Front-end](https://github.com/frontend-team/pika-search-ui)
 
 ---
 
-### 🔍 Bước 7: Test hệ thống
+## 📚 Citations & Acknowledgements
 
-- Trước khi test, vào phần `MODEL` (có comment) để chọn model:
-  - Máy local khó chạy 3 model cùng lúc → chọn 1 model (khuyến nghị **BeiT-3**)
-  - `Fused model` chưa hỗ trợ → đừng dùng
-  - Bỏ URL image search chưa làm → đừng dùng
-- Hiện tại chỉ có backend (chưa có frontend).
+We would like to express our gratitude to the following open-source projects and research teams whose work has made **PIKA Search** possible:
 
-👉 Chạy server:
+- 🧠 **[BEiT-3](https://github.com/microsoft/unilm/tree/master/beit3)** — for providing state-of-the-art vision-language pretraining models.
+- 🖼️ **[OpenAI CLIP ViT](https://github.com/openai/CLIP)** — for enabling robust visual-text embeddings and cross-modal search.
+- 🗃️ **[Milvus](https://milvus.io)** — for powering our large-scale vector similarity search engine.
+- 🔍 **[Elasticsearch](https://www.elastic.co/elasticsearch)** — for efficient text indexing and hybrid retrieval integration.
 
-```bash
-cd tới thư mục repo
-cd app
-uvicorn main:app --reload
-```
-
-- Khi hiện log xanh, vào Swagger UI: [http://127.0.0.1:8000/docs#/default](http://127.0.0.1:8000/docs#/default)
-- Muốn đổi mô hình:
-  - Dùng `Ctrl+C` để stop server
-  - Đổi model
-  - Chạy lại `uvicorn`
+> Our team sincerely acknowledges these frameworks and their authors for advancing open research and enabling practical AI systems like **PIKA Search**.
 
 ---
-
-✨ **Vậy là xong! Chúc bạn test thành công hệ thống 🚀**
