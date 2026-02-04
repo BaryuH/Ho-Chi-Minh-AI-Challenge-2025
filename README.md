@@ -21,7 +21,7 @@
 | Member | Role | Contribution |
 |---------|------|---------------|
 | [**Pham Nguyen Gia Huy**](https://github.com/BaryuH) | Team Lead, Backend & Model Integration | System architecture, pipeline, model deployment, data preprocessing, feature extraction, and indexing pipeline|
-| [**Nguyen Gia Huy**](https://github.com/anhbilong) | Data Engineer | Data preprocessing, feature extraction, and indexing pipeline |
+| [**Nguyen Gia Huy**](https://github.com/NguyenGiaHuy206) | Data Engineer | Data preprocessing, feature extraction, and indexing pipeline |
 | [**Nguyen Quang Nghia**](https://github.com/JulianNguyen1610) | Data Engineer | Data preprocessing, feature extraction, and indexing pipeline |
 | [**Tran Thi Hong Thanh**](https://github.com/ThankTran) | Frontend Developer (UI/UX & Optimazation) | Designed the entire user interface with focus on clean visuals, responsiveness, and smooth performance. Built the interactive result viewer for video playback and similarity visualization. |
 | [**Pham Tuan Khang**](https://github.com/KhangPham205) | Frontend Developer (Integration & Optimazation & Perfomance) | Implemented API connections and custom hooks for backend integration. Managed data flow, caching, and optimization. Led code review and maintained project documentation. |
